@@ -7,3 +7,33 @@
                  \ \_\ \ \_\ \_\ \____\      \ \____/ \ \_\ \_\ \__/.\_\ \____/\/\____/
                   \/_/  \/_/\/_/\/____/       \/___/   \/_/\/_/\/__/\/_/\/___/  \/___/
 ```
+
+### Fast Start Github
+
+```
+git clone https://github.com/aphos-ai/threejs.git
+cd threejs
+npm install
+```
+
+then
+
+```
+npm run build
+npm run start
+```
+
+or
+
+```
+npm run dev
+```
+
+---
+
+### Fast Start Docker
+
+```
+docker pull timakaa/threejs
+docker run -p 3000:3000 timakaa/threejs
+```
