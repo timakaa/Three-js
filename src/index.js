@@ -116,8 +116,16 @@ const logoTexture = {
 };
 const aphosLogoUrl = new URL("assets/aphos.glb", import.meta.url).href;
 
+// Add cache for logo model
+const modelCache = {
+  logoModel: null,
+};
+
+// Load logo model once
 loader.load(aphosLogoUrl, (gltf) => {
-  const logo = gltf.scene;
+  modelCache.logoModel = gltf.scene.clone();
+  // Initial logo setup
+  const logo = modelCache.logoModel.clone();
   scene.add(logo);
 
   logo.traverse((node) => {
@@ -348,90 +356,84 @@ function createLogo() {
 
   lastCreationTime = currentTime;
 
-  loader.load(
-    aphosLogoUrl,
-    (gltf) => {
-      const logo = gltf.scene;
-      scene.add(logo);
+  // Use cached model instead of loading
+  if (modelCache.logoModel) {
+    const logo = modelCache.logoModel.clone();
+    scene.add(logo);
 
-      const radius = 1;
-      const height = 0.3;
+    const radius = 1;
+    const height = 0.3;
 
-      logo.traverse((node) => {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
+    logo.traverse((node) => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
 
-          const material = new THREE.MeshPhysicalMaterial({
-            color: 0xffffff,
-            envMapIntensity: 1.5,
-            clearcoat: 0.5,
-            clearcoatRoughness: 0.2,
-            map: logoTexture.map,
-          });
+        const material = new THREE.MeshPhysicalMaterial({
+          color: 0xffffff,
+          envMapIntensity: 1.5,
+          clearcoat: 0.5,
+          clearcoatRoughness: 0.2,
+          map: logoTexture.map,
+        });
 
-          node.material = material;
-        }
-      });
+        node.material = material;
+      }
+    });
 
-      logo.position.set(
+    logo.position.set(
+      intersectionPoint.x,
+      intersectionPoint.y,
+      intersectionPoint.z,
+    );
+    logo.rotation.x = Math.PI / 2;
+
+    const cylinderShape = new CANNON.Cylinder(radius, radius, height);
+    const logoBody = new CANNON.Body({
+      mass: 1000,
+      shape: cylinderShape,
+      position: new CANNON.Vec3(
         intersectionPoint.x,
         intersectionPoint.y,
         intersectionPoint.z,
-      );
-      logo.rotation.x = Math.PI / 2;
+      ),
+      material: planePhysMat,
+      linearDamping: 0.1,
+      angularDamping: 0.1,
+      fixedRotation: false,
+    });
+    logoBody.angularVelocity.set(4, 10, 10);
 
-      const cylinderShape = new CANNON.Cylinder(radius, radius, height);
-      const logoBody = new CANNON.Body({
-        mass: 1000,
-        shape: cylinderShape,
-        position: new CANNON.Vec3(
-          intersectionPoint.x,
-          intersectionPoint.y,
-          intersectionPoint.z,
-        ),
-        material: planePhysMat,
-        linearDamping: 0.1,
-        angularDamping: 0.1,
-        fixedRotation: false,
-      });
-      logoBody.angularVelocity.set(4, 10, 10);
+    world.addBody(logoBody);
+    meshes.push(logo);
+    bodies.push(logoBody);
 
-      world.addBody(logoBody);
-      meshes.push(logo);
-      bodies.push(logoBody);
+    const groundLogoContactMat = new CANNON.ContactMaterial(
+      planePhysMat,
+      planePhysMat,
+      {
+        friction: 0.1,
+        restitution: 0.3,
+        frictionEquationRegularizationTime: 3,
+      },
+    );
 
-      const groundLogoContactMat = new CANNON.ContactMaterial(
-        planePhysMat,
-        planePhysMat,
-        {
-          friction: 0.1,
-          restitution: 0.3,
-          frictionEquationRegularizationTime: 3,
-        },
-      );
+    world.addContactMaterial(groundLogoContactMat);
 
-      world.addContactMaterial(groundLogoContactMat);
+    setTimeout(() => {
+      if (meshes.length > 0) {
+        const lastMesh = meshes.shift();
+        scene.remove(lastMesh);
+      }
 
-      setTimeout(() => {
-        if (meshes.length > 0) {
-          const lastMesh = meshes.shift();
-          scene.remove(lastMesh);
-        }
+      if (bodies.length > 0) {
+        const lastBody = bodies.shift();
+        world.removeBody(lastBody);
+      }
+    }, 10000);
 
-        if (bodies.length > 0) {
-          const lastBody = bodies.shift();
-          world.removeBody(lastBody);
-        }
-      }, 10000);
-
-      requestAnimationFrame(createLogo);
-    },
-    undefined,
-    (error) => {
-      console.error("Error loading GLTF model:", error);
-    },
-  );
+    requestAnimationFrame(createLogo);
+  }
 }
 
 // Physics
