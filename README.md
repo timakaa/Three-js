@@ -40,4 +40,4 @@ docker pull timakaa/threejs
 docker run -p 3000:3000 timakaa/threejs
 ```
 
-![[https://i.imgur.com/8aicbGC.png]]
+![](https://i.imgur.com/aYK366L.jpeg)
