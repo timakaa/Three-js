@@ -2,7 +2,7 @@
 const path = require("path");
 
 module.exports = {
-  mode: "development",
+  mode: process.env.NODE_ENV === "production" ? "production" : "development",
   devServer: {
     static: [
       {
@@ -10,7 +10,7 @@ module.exports = {
         publicPath: "/",
       },
       {
-        directory: path.join(__dirname, "public"),
+        directory: path.join(__dirname, "src"),
         publicPath: "/",
       },
     ],
@@ -23,7 +23,7 @@ module.exports = {
     client: {
       overlay: false,
     },
-    watchFiles: ["src/**/*", "public/**/*"],
+    watchFiles: ["src/**/*"],
   },
   entry: "./src/index.js",
   output: {
@@ -31,4 +31,22 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     publicPath: "/",
   },
+  plugins: [
+    new (require("copy-webpack-plugin"))({
+      patterns: [
+        {
+          from: "src/index.html",
+          to: "index.html",
+        },
+        {
+          from: "src/index.css",
+          to: "index.css",
+        },
+        {
+          from: "src/assets",
+          to: "assets",
+        },
+      ],
+    }),
+  ],
 };

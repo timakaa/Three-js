@@ -40,6 +40,8 @@ loadingManager.onError = function (url) {
 // Create cache for loaded textures
 const textureCache = new Map();
 
+const backgroundUrl = new URL("assets/background.exr", import.meta.url).href;
+
 // Modified loader function
 const exrLoader = new EXRLoader(loadingManager);
 const loadEnvironmentMap = () => {
@@ -52,7 +54,7 @@ const loadEnvironmentMap = () => {
   }
 
   exrLoader.load(
-    "/background.exr",
+    backgroundUrl,
     function (texture) {
       texture.mapping = THREE.EquirectangularReflectionMapping;
 
@@ -76,9 +78,10 @@ const loadEnvironmentMap = () => {
 //! Call the loading function
 loadEnvironmentMap();
 
+const textUrl = new URL("assets/untitled.glb", import.meta.url).href;
 const loader = new GLTFLoader(loadingManager);
 loader.load(
-  "/untitled.glb",
+  textUrl,
   (gltf) => {
     const sofa = gltf.scene;
     scene.add(sofa);
@@ -111,8 +114,9 @@ loader.load(
 const logoTexture = {
   map: null,
 };
+const aphosLogoUrl = new URL("assets/aphos.glb", import.meta.url).href;
 
-loader.load("/aphos.glb", (gltf) => {
+loader.load(aphosLogoUrl, (gltf) => {
   const logo = gltf.scene;
   scene.add(logo);
 
@@ -345,7 +349,7 @@ function createLogo() {
   lastCreationTime = currentTime;
 
   loader.load(
-    "/aphos.glb",
+    aphosLogoUrl,
     (gltf) => {
       const logo = gltf.scene;
       scene.add(logo);
