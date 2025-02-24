@@ -6,6 +6,13 @@ import * as CANNON from "cannon-es";
 
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader";
 
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
 const loadingManager = new THREE.LoadingManager();
 const progressBar = document.getElementById("progress-bar");
 const progressBarContainer = document.querySelector(".progress-bar-container");
@@ -130,13 +137,6 @@ loader.load("/aphos.glb", (gltf) => {
   logo.position.set(3, 4, 7);
 });
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
-renderer.shadowMap.enabled = true;
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
 const scene = new THREE.Scene();
 
 const world = new CANNON.World({
@@ -207,7 +207,7 @@ scene.add(torus);
 
 const planeGeometry = new THREE.BoxGeometry(60, 60, 2);
 const planeMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
+  color: 0xf0f0f0,
   side: THREE.DoubleSide,
 });
 const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -318,8 +318,32 @@ window.addEventListener("mousemove", (e) => {
 const meshes = [];
 const bodies = [];
 
-// Изменим обработчик клика
-window.addEventListener("click", () => {
+// Add these variables at the top level, where other declarations are
+let isMouseDown = false;
+let lastCreationTime = 0;
+const CREATION_DELAY = 100; // 100ms between creations
+
+// Remove the old mousedown event listener and add these new ones
+window.addEventListener("mousedown", () => {
+  isMouseDown = true;
+  createLogo();
+});
+
+window.addEventListener("mouseup", () => {
+  isMouseDown = false;
+});
+
+function createLogo() {
+  if (!isMouseDown) return;
+
+  const currentTime = Date.now();
+  if (currentTime - lastCreationTime < CREATION_DELAY) {
+    requestAnimationFrame(createLogo);
+    return;
+  }
+
+  lastCreationTime = currentTime;
+
   loader.load(
     "/aphos.glb",
     (gltf) => {
@@ -384,13 +408,27 @@ window.addEventListener("click", () => {
       );
 
       world.addContactMaterial(groundLogoContactMat);
+
+      setTimeout(() => {
+        if (meshes.length > 0) {
+          const lastMesh = meshes.shift();
+          scene.remove(lastMesh);
+        }
+
+        if (bodies.length > 0) {
+          const lastBody = bodies.shift();
+          world.removeBody(lastBody);
+        }
+      }, 10000);
+
+      requestAnimationFrame(createLogo);
     },
     undefined,
     (error) => {
       console.error("Error loading GLTF model:", error);
     },
   );
-});
+}
 
 // Physics
 const sphereGeo = new THREE.SphereGeometry(2);
