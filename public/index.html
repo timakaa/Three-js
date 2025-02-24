@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./index.css" />
+    <title>Three.js Project</title>
+  </head>
+  <body>
+    <div class="progress-bar-container">
+      <div class="progress-bar">Loading...</div>
+      <progress id="progress-bar" value="0" max="100"></progress>
+    </div>
+    <script type="vertex" id="vertexShader">
+      void main() {
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+      }
+    </script>
+    <script type="fragment" id="fragmentShader">
+      void main() {
+        gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+      }
+    </script>
+    <script src="bundle.js" type="module"></script>
+  </body>
+</html>
